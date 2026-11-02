@@ -2,7 +2,7 @@
 ; Expects the self-contained publish output in ..\publish (see build-installer.ps1).
 
 #define AppName "EveryDownload"
-#define AppVersion "1.0.0"
+#define AppVersion "1.0.1"
 #define AppExe "EveryDownload.exe"
 
 [Setup]
