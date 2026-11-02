@@ -103,7 +103,7 @@ public static class BrowserIntegration
         switch (type)
         {
             case "ping":
-                return new { ok = true, version = "1.0.1" };
+                return new { ok = true, version = "1.0.2" };
 
             case "add":
             {

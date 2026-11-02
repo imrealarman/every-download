@@ -23,6 +23,7 @@ public sealed class AddRequest
     public List<string> Mirrors { get; } = new();
     public string ExpectedHash { get; set; } = "";
     public DateTime? StartAt { get; set; }
+    public DownloadPriority Priority { get; set; } = DownloadPriority.Normal;
     public StartMode Start { get; set; } = StartMode.Queue;
     public bool FromBrowser { get; set; }
     /// <summary>The browser asked for no dialog.</summary>
@@ -124,6 +125,7 @@ public sealed class DownloadManager : IDisposable
                     SpeedLimitKb = request.SpeedLimitKb,
                     ExpectedHash = Integrity.Clean(request.ExpectedHash),
                     StartAt = request.StartAt,
+                    Priority = request.Priority,
                     Status = request.Start == StartMode.Later ? DownloadStatus.Paused : DownloadStatus.Queued,
                     Force = request.Start == StartMode.Now,
                 };
@@ -306,7 +308,7 @@ public sealed class DownloadManager : IDisposable
         {
             int slots = Settings.MaxSimultaneous - running.Count;
             var now = DateTime.Now;
-            foreach (var item in items.OrderBy(i => i.AddedAt))
+            foreach (var item in items.OrderByDescending(i => i.Priority).ThenBy(i => i.AddedAt))
             {
                 if (item.Status != DownloadStatus.Queued || running.ContainsKey(item.Id)) continue;
                 if (item.StartAt is { } at && at > now) continue;
@@ -316,8 +318,34 @@ public sealed class DownloadManager : IDisposable
                 toStart.Add(item);
                 slots--;
             }
+            if (QueueOpen && !HeldForMeteredNetwork) MakeRoomForPriority(now);
         }
         foreach (var item in toStart) Launch(item);
+    }
+
+    /// <summary>
+    /// If a waiting download outranks one that is running and every slot is taken, the lowest-ranked running download
+    /// steps back into the queue (keeping its progress) so the important one can start at once.
+    /// </summary>
+    private void MakeRoomForPriority(DateTime now)
+    {
+        if (Settings.MaxSimultaneous - running.Count > 0) return;
+        var waiting = items.Where(i => i.Status == DownloadStatus.Queued && !running.ContainsKey(i.Id) && !i.Force
+            && (i.StartAt is not { } at || at <= now) && (i.RetryAt is not { } r || r <= now)).MaxBy(i => i.Priority);
+        if (waiting == null) return;
+        var victim = items.Where(i => i.Status == DownloadStatus.Downloading && running.ContainsKey(i.Id) && i.Priority < waiting.Priority)
+            .OrderBy(i => i.Priority).ThenByDescending(i => i.AddedAt).FirstOrDefault();
+        if (victim == null || !running.TryGetValue(victim.Id, out var cts)) return;
+        lock (stopTo) stopTo[victim.Id] = DownloadStatus.Queued;
+        cts.Cancel();
+    }
+
+    /// <summary>Changes a download's place in the queue; a higher one is started first and may take a running download's slot.</summary>
+    public void SetPriority(DownloadItem item, DownloadPriority priority)
+    {
+        item.Priority = priority;
+        dirty = true;
+        Pump();
     }
 
     private void Launch(DownloadItem item)

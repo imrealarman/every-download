@@ -68,6 +68,9 @@
                 <Button Style="{StaticResource ToolButton}" Click="Pause_Click" ToolTipService.ToolTip="Pause selected (or all)">
                     <FontIcon Glyph="&#xE769;" FontSize="14" />
                 </Button>
+                <Button Style="{StaticResource ToolButton}" Click="Prioritize_Click" ToolTipService.ToolTip="Make the selected downloads high priority (click again to undo)">
+                    <FontIcon Glyph="&#xE74A;" FontSize="14" />
+                </Button>
                 <Button Style="{StaticResource ToolButton}" Click="Remove_Click" ToolTipService.ToolTip="Remove selected (Delete)">
                     <FontIcon Glyph="&#xE74D;" FontSize="14" />
                 </Button>

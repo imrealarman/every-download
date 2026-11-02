@@ -287,6 +287,32 @@ public sealed class EngineTests : IDisposable
     }
 
     [Fact]
+    public async Task A_high_priority_download_takes_a_slot_and_finishes_first()
+    {
+        server.Add("/low.bin", Bytes(3 * 1024 * 1024, 40));
+        server.Add("/urgent.bin", Bytes(1024 * 1024, 41));
+        server.SlowMs = 4;
+        using var manager = Manager(out var settings);
+        settings.MaxSimultaneous = 1;
+
+        var first = new AddRequest { Connections = 1 };
+        first.Urls.Add(server.Url("/low.bin"));
+        var slow = manager.Add(first).Single();
+        await WaitFor(() => slow.DoneBytes > 100_000);
+
+        var second = new AddRequest { Connections = 1, Priority = DownloadPriority.High };
+        second.Urls.Add(server.Url("/urgent.bin"));
+        var urgent = manager.Add(second).Single();
+
+        await WaitFor(() => urgent.Status == DownloadStatus.Completed, 60);
+        Assert.NotEqual(DownloadStatus.Completed, slow.Status); // it stepped aside instead of finishing first
+
+        server.SlowMs = 0;
+        await WaitFor(() => slow.Status == DownloadStatus.Completed, 60); // and it carried on afterwards
+        Assert.Equal(3 * 1024 * 1024, new FileInfo(slow.FilePath).Length);
+    }
+
+    [Fact]
     public async Task A_paused_download_can_be_started_again_and_finishes()
     {
         var data = Bytes(4 * 1024 * 1024, 30);

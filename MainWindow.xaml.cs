@@ -353,6 +353,16 @@ public sealed partial class MainWindow : Window
         else foreach (var i in chosen.Where(i => i.CanPause)) manager.Pause(i);
     }
 
+    /// <summary>Toggles the selected downloads between high priority (first in line, may take a running download's slot) and normal.</summary>
+    private void Prioritize_Click(object sender, RoutedEventArgs e)
+    {
+        var chosen = Selected().Where(i => !i.IsFinished).ToList();
+        if (chosen.Count == 0) { ShowNotice("Select a download that is not finished yet.", InfoBarSeverity.Informational); return; }
+        var target = chosen.All(i => i.Priority == DownloadPriority.High) ? DownloadPriority.Normal : DownloadPriority.High;
+        foreach (var i in chosen) manager.SetPriority(i, target);
+        ShowNotice(target == DownloadPriority.High ? "High priority: these go first." : "Back to normal priority.", InfoBarSeverity.Success);
+    }
+
     private void ClearDone_Click(object sender, RoutedEventArgs e) => manager.RemoveFinished();
 
     private async void Remove_Click(object sender, RoutedEventArgs e)
@@ -386,6 +396,17 @@ public sealed partial class MainWindow : Window
         menu.Items.Add(new MenuFlyoutSeparator());
         if (item.CanPause) menu.Items.Add(Entry("Pause", "", () => manager.Pause(item)));
         if (item.CanResume) menu.Items.Add(Entry("Resume", "", () => manager.Start(item)));
+        if (!item.IsFinished)
+        {
+            var priority = new MenuFlyoutSubItem { Text = "Priority", Icon = new FontIcon { Glyph = "" } };
+            foreach (var (label, value) in new[] { ("High (goes first)", DownloadPriority.High), ("Normal", DownloadPriority.Normal), ("Low (goes last)", DownloadPriority.Low) })
+            {
+                var choice = new ToggleMenuFlyoutItem { Text = label, IsChecked = item.Priority == value };
+                choice.Click += (_, _) => { foreach (var i in Selected().Where(i => !i.IsFinished)) manager.SetPriority(i, value); };
+                priority.Items.Add(choice);
+            }
+            menu.Items.Add(priority);
+        }
         menu.Items.Add(Entry("Download again", "", () => manager.Restart(item)));
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(Entry("Copy address", "", () => CopyAddress(item)));

@@ -5,6 +5,9 @@ namespace EveryDownload.Models;
 
 public enum DownloadKind { Http, Ftp, Hls, Torrent }
 
+/// <summary>Where a download stands in the queue. Higher goes first.</summary>
+public enum DownloadPriority { Low = -1, Normal = 0, High = 1 }
+
 public enum DownloadStatus { Queued, Downloading, Paused, Verifying, Scanning, Completed, Failed }
 
 /// <summary>
@@ -65,6 +68,7 @@ public sealed class DownloadItem : INotifyPropertyChanged
     /// <summary>Speed limit for this download in KB/s; 0 is unlimited.</summary>
     public int SpeedLimitKb { get; set; }
     public DateTime? StartAt { get; set; }
+    public DownloadPriority Priority { get; set; } = DownloadPriority.Normal;
     public string ExpectedHash { get; set; } = "";
 
     // ---- progress ---------------------------------------------------------------------------------------------
@@ -148,7 +152,9 @@ public sealed class DownloadItem : INotifyPropertyChanged
         _ => "Resume",
     };
 
-    [JsonIgnore] public string DetailLine => string.Join("  ·  ", new[] { SizeText, SpeedText, EtaText, ConnectionsText }.Where(s => s.Length > 0));
+    [JsonIgnore] public string PriorityText => Priority switch { DownloadPriority.High => "▲ High priority", DownloadPriority.Low => "▼ Low priority", _ => "" };
+
+    [JsonIgnore] public string DetailLine => string.Join("  ·  ", new[] { PriorityText, SizeText, SpeedText, EtaText, ConnectionsText }.Where(s => s.Length > 0));
 
     /// <summary>Tells the bindings that something changed. Call on the UI thread.</summary>
     public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
