@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1416;SYSLIB0014</NoWarn>
+    <RootNamespace>EveryDownload.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The engine is plain .NET, so the tests compile the real source files instead of referencing the WinUI app. -->
+    <Compile Include="..\..\Models\*.cs" LinkBase="Engine\Models" />
+    <Compile Include="..\..\Services\AppSettings.cs" Link="Engine\AppSettings.cs" />
+    <Compile Include="..\..\Services\DownloadManager.cs" Link="Engine\DownloadManager.cs" />
+    <Compile Include="..\..\Services\DownloadStore.cs" Link="Engine\DownloadStore.cs" />
+    <Compile Include="..\..\Services\FtpDownloader.cs" Link="Engine\FtpDownloader.cs" />
+    <Compile Include="..\..\Services\HlsDownloader.cs" Link="Engine\HlsDownloader.cs" />
+    <Compile Include="..\..\Services\HttpFactory.cs" Link="Engine\HttpFactory.cs" />
+    <Compile Include="..\..\Services\Integrity.cs" Link="Engine\Integrity.cs" />
+    <Compile Include="..\..\Services\LaunchRequest.cs" Link="Engine\LaunchRequest.cs" />
+    <Compile Include="..\..\Services\Log.cs" Link="Engine\Log.cs" />
+    <Compile Include="..\..\Services\PathUtil.cs" Link="Engine\PathUtil.cs" />
+    <Compile Include="..\..\Services\Probe.cs" Link="Engine\Probe.cs" />
+    <Compile Include="..\..\Services\RateLimiter.cs" Link="Engine\RateLimiter.cs" />
+    <Compile Include="..\..\Services\SegmentedDownloader.cs" Link="Engine\SegmentedDownloader.cs" />
+    <Compile Include="..\..\Services\SiteGrabber.cs" Link="Engine\SiteGrabber.cs" />
+    <Compile Include="..\..\Services\TorrentDownloader.cs" Link="Engine\TorrentDownloader.cs" />
+    <Compile Include="..\..\Services\UrlPattern.cs" Link="Engine\UrlPattern.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MonoTorrent" Version="3.0.2" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+</Project>

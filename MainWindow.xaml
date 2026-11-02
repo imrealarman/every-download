@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="EveryDownload.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:m="using:EveryDownload.Models"
+    xmlns:local="using:EveryDownload">
+
+    <Grid x:Name="Root"
+          Background="{ThemeResource ChromeBrush}"
+          AllowDrop="True"
+          DragOver="Root_DragOver"
+          Drop="Root_Drop">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="52" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+        </Grid.RowDefinitions>
+
+        <!-- Title bar: the window's own caption buttons are drawn over the right edge -->
+        <Grid x:Name="TitleBar" Grid.Row="0" Background="{ThemeResource ChromeBrush}" ColumnSpacing="10" Padding="14,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Image x:Name="TitleIcon" Width="18" Height="18" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="EveryDownload" VerticalAlignment="Center" FontSize="12" />
+        </Grid>
+
+        <!-- Toolbar -->
+        <Grid Grid.Row="1" Background="{ThemeResource ChromeBrush}" Padding="14,0,14,0" ColumnSpacing="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="240" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Style="{StaticResource PrimaryButton}" Click="Add_Click" ToolTipService.ToolTip="Add one or more links (Ctrl+N)">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE710;" FontSize="13" />
+                    <TextBlock Text="Add link" Foreground="White" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="1" Style="{StaticResource GhostButton}" Click="Batch_Click" ToolTipService.ToolTip="Add many files from a pattern such as photo[01-50].jpg">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE8FD;" FontSize="13" />
+                    <TextBlock Text="Batch" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Style="{StaticResource GhostButton}" Click="Grabber_Click" ToolTipService.ToolTip="Find the files and videos on a web page">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE774;" FontSize="13" />
+                    <TextBlock Text="Site grabber" />
+                </StackPanel>
+            </Button>
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2" Margin="10,0,0,0">
+                <Border Width="1" Height="20" Background="{ThemeResource BorderBrush2}" Margin="0,0,8,0" />
+                <Button Style="{StaticResource ToolButton}" Click="Resume_Click" ToolTipService.ToolTip="Resume selected (or all)">
+                    <FontIcon Glyph="&#xE768;" FontSize="14" />
+                </Button>
+                <Button Style="{StaticResource ToolButton}" Click="Pause_Click" ToolTipService.ToolTip="Pause selected (or all)">
+                    <FontIcon Glyph="&#xE769;" FontSize="14" />
+                </Button>
+                <Button Style="{StaticResource ToolButton}" Click="Remove_Click" ToolTipService.ToolTip="Remove selected (Delete)">
+                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                </Button>
+                <Button Style="{StaticResource ToolButton}" Click="ClearDone_Click" ToolTipService.ToolTip="Clear finished downloads from the list">
+                    <FontIcon Glyph="&#xE894;" FontSize="14" />
+                </Button>
+            </StackPanel>
+
+            <TextBox x:Name="SearchBox" Grid.Column="5" PlaceholderText="Search downloads" VerticalAlignment="Center"
+                     FontFamily="{StaticResource AppFont}" FontSize="12" TextChanged="Search_Changed" />
+
+            <Button x:Name="LimitButton" Grid.Column="6" Style="{StaticResource GhostButton}" ToolTipService.ToolTip="Speed limiter">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xEC4A;" FontSize="13" />
+                    <TextBlock x:Name="LimitText" Text="No limit" />
+                </StackPanel>
+                <Button.Flyout>
+                    <Flyout Opening="LimitFlyout_Opening">
+                        <StackPanel Width="250" Spacing="10">
+                            <ToggleSwitch x:Name="LimitSwitch" Header="Limit total speed" Toggled="LimitSwitch_Toggled" />
+                            <NumberBox x:Name="LimitBox" Header="Speed limit (KB/s)" Minimum="10" Maximum="10000000" SmallChange="100"
+                                       SpinButtonPlacementMode="Inline" ValueChanged="LimitBox_ValueChanged" />
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+            <Button Grid.Column="7" Style="{StaticResource ToolButton}" Click="Settings_Click" ToolTipService.ToolTip="Settings">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+        </Grid>
+
+        <!-- Body: filters | downloads | details -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="210" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="DetailColumn" Width="340" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0" Background="{ThemeResource RailBrush}" VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="RailPanel" Padding="10,12" Spacing="2" />
+            </ScrollViewer>
+
+            <Grid Grid.Column="1" Background="{ThemeResource CanvasBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <InfoBar x:Name="Notice" Grid.Row="0" IsOpen="False" Margin="12,10,12,0" IsClosable="True" />
+
+                <ListView x:Name="DownloadList"
+                          Grid.Row="1"
+                          SelectionMode="Extended"
+                          ItemContainerStyle="{StaticResource BareListViewItem}"
+                          SelectionChanged="List_SelectionChanged"
+                          DoubleTapped="List_DoubleTapped"
+                          RightTapped="List_RightTapped"
+                          KeyDown="List_KeyDown"
+                          IsItemClickEnabled="False">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="m:DownloadItem">
+                            <Grid MinHeight="68" Margin="12,4" Padding="16,10,12,10" ColumnSpacing="14"
+                                  Background="{ThemeResource TileBrush}" BorderBrush="{ThemeResource BorderBrush1}" BorderThickness="1" CornerRadius="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="40" Height="40" CornerRadius="8" Background="{ThemeResource AccentTintBrush}" VerticalAlignment="Center">
+                                    <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="18" Foreground="{StaticResource AccentBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind FileName, Mode=OneWay}" FontSize="13" TextTrimming="CharacterEllipsis" TextReadingOrder="DetectFromContent" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind PercentText, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                    </Grid>
+                                    <ProgressBar Value="{x:Bind Percent, Mode=OneWay}" Maximum="100" IsIndeterminate="{x:Bind Indeterminate, Mode=OneWay}"
+                                                 Visibility="{x:Bind ShowProgress, Mode=OneWay}" Height="4" CornerRadius="2" />
+                                    <TextBlock Text="{x:Bind StatusText, Mode=OneWay}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind DetailLine, Mode=OneWay}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ToolButton}" Width="34" Height="34" MinHeight="34" Tag="{x:Bind}" Click="RowPrimary_Click"
+                                            ToolTipService.ToolTip="{x:Bind PrimaryTip, Mode=OneWay}">
+                                        <FontIcon Glyph="{x:Bind PrimaryGlyph, Mode=OneWay}" FontSize="14" />
+                                    </Button>
+                                    <Button Style="{StaticResource ToolButton}" Width="34" Height="34" MinHeight="34" Tag="{x:Bind}" Click="RowFolder_Click"
+                                            ToolTipService.ToolTip="Show in folder">
+                                        <FontIcon Glyph="&#xE838;" FontSize="14" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <StackPanel x:Name="EmptyState" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" IsHitTestVisible="False">
+                    <FontIcon Glyph="&#xE896;" FontSize="44" Foreground="{ThemeResource TextMutedBrush}" />
+                    <TextBlock x:Name="EmptyTitle" Text="Nothing here yet" FontSize="16" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="EmptyHint" Style="{StaticResource MutedText}" HorizontalAlignment="Center" TextAlignment="Center"
+                               Text="Drop a link, a magnet or a .torrent file anywhere,&#x0a;or press Add link." />
+                </StackPanel>
+            </Grid>
+
+            <!-- Details of the selected download -->
+            <ScrollViewer x:Name="DetailPanel" Grid.Column="2" Background="{ThemeResource PanelBrush}" VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="18,16" Spacing="10">
+                    <TextBlock Text="DETAILS" Style="{StaticResource PanelHeader}" />
+                    <TextBlock x:Name="DetName" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" TextReadingOrder="DetectFromContent" />
+                    <TextBlock x:Name="DetStatus" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                    <local:SpeedGraph x:Name="DetGraph" />
+                    <TextBlock Text="CONNECTIONS" Style="{StaticResource PanelHeader}" Margin="0,6,0,0" />
+                    <local:SegmentBar x:Name="DetSegments" />
+                    <TextBlock x:Name="DetSegmentsHint" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                    <TextBlock Text="INFORMATION" Style="{StaticResource PanelHeader}" Margin="0,6,0,0" />
+                    <StackPanel x:Name="DetRows" Spacing="6" />
+                    <TextBlock Text="ACTIONS" Style="{StaticResource PanelHeader}" Margin="0,6,0,0" />
+                    <StackPanel x:Name="DetActions" Spacing="6" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Status bar -->
+        <Grid Grid.Row="3" Background="{ThemeResource RailBrush}" Padding="16,0" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <FontIcon Glyph="&#xE896;" FontSize="12" Foreground="{StaticResource AccentBrush}" />
+                <TextBlock x:Name="StatusSpeed" Text="0 B/s" FontSize="12" />
+                <TextBlock x:Name="StatusCounts" Style="{StaticResource MutedText}" Margin="8,0,0,0" />
+            </StackPanel>
+            <TextBlock x:Name="StatusQueue" Grid.Column="1" Style="{StaticResource MutedText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="StatusBrowser" Grid.Column="2" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</Window>

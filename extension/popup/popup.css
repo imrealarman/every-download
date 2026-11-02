@@ -1,0 +1,26 @@
+:root {
+  --bg: #ffffff; --panel: #f5f5f5; --text: #222222; --muted: #6e6e6e; --line: #dadada; --accent: #2680eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #212121; --panel: #2b2b2b; --text: #eaeaea; --muted: #9b9b9b; --line: #3a3a3a; }
+}
+* { box-sizing: border-box; }
+body { width: 340px; margin: 0; background: var(--bg); color: var(--text); font: 12px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.state { margin-left: auto; font-size: 11px; color: var(--muted); }
+.state.ok { color: #1c8c4e; }
+.state.bad { color: #d13438; }
+section { padding: 10px 14px; }
+h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.switch { display: flex; align-items: center; gap: 8px; }
+ul { list-style: none; margin: 0; padding: 0; max-height: 210px; overflow: auto; }
+li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+li.muted { display: block; border-style: dashed; }
+li .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+li small { display: block; color: var(--muted); }
+button { font: inherit; cursor: pointer; border-radius: 16px; padding: 7px 14px; border: none; background: var(--accent); color: #fff; }
+button.secondary { background: transparent; color: var(--text); border: 2px solid var(--text); padding: 5px 14px; }
+li button { padding: 5px 12px; }
+.buttons { display: flex; gap: 8px; border-top: 1px solid var(--line); }
+.muted { color: var(--muted); }
+#help { padding: 0 14px 12px; margin: 0; }

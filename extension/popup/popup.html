@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EveryDownload</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="../icons/32.png" alt="" width="22" height="22">
+    <strong>EveryDownload</strong>
+    <span id="state" class="state">checking…</span>
+  </header>
+
+  <section>
+    <label class="switch"><input type="checkbox" id="capture"> Catch downloads from this browser</label>
+  </section>
+
+  <section>
+    <h2>Videos and audio on this page</h2>
+    <ul id="media"><li class="muted">Nothing found yet. Press play on a video.</li></ul>
+  </section>
+
+  <section class="buttons">
+    <button id="grab">Find files on this page</button>
+    <button id="open" class="secondary">Open EveryDownload</button>
+  </section>
+
+  <p id="help" class="muted" hidden>
+    EveryDownload is not reachable. Open the app once and choose <em>Set up browser hand-off</em> in Settings → Browser.
+  </p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "EveryDownload",
+  "version": "1.0.0",
+  "description": "Sends downloads to EveryDownload, adds a Download button to videos, and finds files on any page.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZwbq0EuG1gmJ1HRq8KkPk21AQNeWwN69QiSPKrLYXGE7tEaXwq7/TP+r+/7jk/PfIaKBmGyWXSjh12R2ps7ARm+NYGQ1YvTe20yNI/2Cd4HKAUYyjgksVUGQqqpvRiI3PigL4MPX92Zav8xueSqaLsBxsxe366XVzIJyS7eIzA6OMYivTtjjHeCk4oqAZdiNO2J5p214Gs1CTu6Z88DWQ1d2FOIlk+S2N81mcjvjf2/ZLcnLnKMIuzU7RQh6vwEy0guHXju0MsynHaZmDuG1+u+/Z0s4RGDS4oJIW+WYiBJPvQ4pgsi9iNaYFFA6VlDOB3pwgfpDwC/Sq0S8L9tQQIDAQAB",
+  "permissions": ["downloads", "nativeMessaging", "webRequest", "contextMenus", "storage", "cookies", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "EveryDownload",
+    "default_popup": "popup/popup.html",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "content_scripts": [
+    { "matches": ["http://*/*", "https://*/*"], "js": ["content.js"], "run_at": "document_idle" }
+  ]
+}
