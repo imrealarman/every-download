@@ -108,6 +108,13 @@ public static class BrowserIntegration
             case "add":
             {
                 var args = new List<string> { "--add", Text(root, "url") };
+                // A selection of several links arrives as one request, so the app shows one Add dialog with all of them.
+                if (root.TryGetProperty("urls", out var many) && many.ValueKind == JsonValueKind.Array)
+                {
+                    var list = many.EnumerateArray().Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString() ?? "").Where(u => u.Length > 0).ToList();
+                    if (list.Count > 0) args[1] = list[0];
+                    foreach (var extra in list.Skip(1)) { args.Add("--also"); args.Add(extra); }
+                }
                 void Option(string flag, string field) { string v = Text(root, field); if (v.Length > 0) { args.Add(flag); args.Add(v); } }
                 Option("--referer", "referrer");
                 Option("--cookie", "cookie");

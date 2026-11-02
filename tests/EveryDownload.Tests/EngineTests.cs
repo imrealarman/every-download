@@ -381,6 +381,15 @@ public sealed class EngineTests : IDisposable
     }
 
     [Fact]
+    public void Several_selected_links_arrive_as_one_request()
+    {
+        var r = LaunchRequest.Parse(new[] { "--add", "http://x/a.zip", "--also", "http://x/b.zip", "--also", "http://x/c.zip", "--referer", "http://x/" });
+        Assert.Single(r.Adds);
+        Assert.Equal(new[] { "http://x/a.zip", "http://x/b.zip", "http://x/c.zip" }, r.Adds[0].Urls);
+        Assert.Equal("http://x/", r.Adds[0].Referer);
+    }
+
+    [Fact]
     public async Task The_site_grabber_lists_files_and_skips_pages()
     {
         var found = await SiteGrabber.GrabAsync(http, server.Url("/page"), new DownloadItem(), AppSettings.DefaultUserAgent, null, 1, CancellationToken.None);

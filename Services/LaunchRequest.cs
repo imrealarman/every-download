@@ -10,7 +10,7 @@ public sealed class LaunchRequest
     public bool Show { get; set; }
 
     /// <summary>
-    /// Understands <c>--add URL</c> (followed by any of <c>--referer --cookie --ua --name</c>), <c>--grab URL</c>,
+    /// Understands <c>--add URL</c> (followed by any of <c>--also URL --referer --cookie --ua --name</c>), <c>--grab URL</c>,
     /// <c>--background</c>, <c>--show</c>, and bare magnet links, web addresses and .torrent files.
     /// </summary>
     public static LaunchRequest Parse(IEnumerable<string> args)
@@ -30,6 +30,7 @@ public sealed class LaunchRequest
                 case "--add":
                     if (Next() is { } url) { current = new AddRequest { Urls = { url }, FromBrowser = true }; request.Adds.Add(current); }
                     break;
+                case "--also": if (Next() is { } more && current != null) current.Urls.Add(more); break;
                 case "--referer": if (Next() is { } r && current != null) current.Referer = r; break;
                 case "--cookie": if (Next() is { } c && current != null) current.Cookie = c; break;
                 case "--ua": if (Next() is { } u && current != null) current.UserAgent = u; break;

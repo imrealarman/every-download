@@ -34,12 +34,14 @@ function baseName(path) {
   return (path || '').split(/[\\/]/).pop() || '';
 }
 
-async function sendToApp({ url, referrer, filename, silent }) {
+async function sendToApp({ url, urls, referrer, filename, silent }) {
+  const all = urls && urls.length ? urls : [url];
   await send({
     type: 'add',
-    url,
+    url: all[0],
+    urls: all,
     referrer: referrer || '',
-    cookie: await cookieHeader(url),
+    cookie: await cookieHeader(all[0]),
     userAgent: navigator.userAgent,
     filename: filename || '',
     silent: !!silent,
@@ -171,15 +173,48 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
 // ---- right-click menu -------------------------------------------------------------------------------------------
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({ id: 'ed-link', title: 'Download with EveryDownload', contexts: ['link', 'image', 'video', 'audio'] });
+  chrome.contextMenus.create({ id: 'ed-link', title: 'Download with EveryDownload', contexts: ['link', 'image', 'video', 'audio', 'selection'] });
   chrome.contextMenus.create({ id: 'ed-grab', title: 'Find files on this page with EveryDownload', contexts: ['page'] });
 });
+
+/** Every link inside the text the user selected, plus any plain web addresses typed in it. */
+async function linksInSelection(tabId, frameId, selectionText) {
+  const found = new Set();
+  try {
+    const [result] = await chrome.scripting.executeScript({
+      target: { tabId, frameIds: [frameId || 0] },
+      func: () => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) return [];
+        const urls = new Set();
+        for (let i = 0; i < selection.rangeCount; i++) {
+          const range = selection.getRangeAt(i);
+          const node = range.commonAncestorContainer;
+          const root = node.nodeType === 1 ? node : node.parentElement;
+          if (!root) continue;
+          root.querySelectorAll('a[href]').forEach((a) => { if (range.intersectsNode(a)) urls.add(a.href); });
+          const enclosing = root.closest('a[href]');
+          if (enclosing) urls.add(enclosing.href);
+        }
+        return [...urls];
+      },
+    });
+    (result?.result || []).forEach((u) => found.add(u));
+  } catch (error) {
+    console.warn('Could not read the selection on this page', error);
+  }
+  for (const m of (selectionText || '').match(/(https?|ftp):\/\/[^\s"'<>]+|magnet:\?[^\s"'<>]+/gi) || []) found.add(m);
+  return [...found].filter((u) => /^(https?|ftp|magnet):/i.test(u));
+}
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     if (info.menuItemId === 'ed-link') {
-      const url = info.linkUrl || info.srcUrl;
-      if (url) await sendToApp({ url, referrer: tab?.url });
+      const urls = new Set(await linksInSelection(tab.id, info.frameId, info.selectionText));
+      // The link under the cursor, or the picture / video itself, when nothing was selected.
+      const direct = info.linkUrl || info.srcUrl;
+      if (direct && urls.size === 0) urls.add(direct);
+      if (urls.size > 0) await sendToApp({ urls: [...urls], referrer: tab?.url });
     } else if (info.menuItemId === 'ed-grab') {
       await send({ type: 'grab', url: tab?.url });
     }
